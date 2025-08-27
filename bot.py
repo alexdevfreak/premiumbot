@@ -2,10 +2,10 @@ import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-# 🔑 Environment Variables (from Render dashboard → Environment)
-API_ID = int(os.getenv("API_ID", "123456"))  
-API_HASH = os.getenv("API_HASH", "your_api_hash")  
-BOT_TOKEN = os.getenv("BOT_TOKEN", "your_bot_token")  
+# 🔑 Environment Variables (set these in Render dashboard)
+API_ID = int(os.getenv("API_ID", "123456"))
+API_HASH = os.getenv("API_HASH", "your_api_hash")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "your_bot_token")
 
 LOG_CHANNEL = int(os.getenv("LOG_CHANNEL", "-1001234567890"))
 DATA_CHANNEL = int(os.getenv("DATA_CHANNEL", "-1001234567890"))
@@ -30,13 +30,14 @@ async def start(_, m: Message):
 @app.on_message(filters.document | filters.video | filters.photo)
 async def store_file(_, m: Message):
     file = m.document or m.video or m.photo
-    file_id = file.file_id  
+    if not file:
+        return await m.reply("❌ 𝐅𝐢𝐥𝐞 𝐧𝐨𝐭 𝐝𝐞𝐭𝐞𝐜𝐭𝐞𝐝.")
 
     # Forward to data channel
     sent = await m.forward(DATA_CHANNEL)
 
     # Make sharable link
-    link = f"https://t.me/{app.me.username}?start={sent.id}"
+    link = f"https://t.me/{(await app.get_me()).username}?start={sent.id}"
 
     await m.reply_text(
         f"✅ 𝐅𝐢𝐥𝐞 𝐒𝐚𝐯𝐞𝐝!\n\n📥 [𝐂𝐥𝐢𝐜𝐤 𝐇𝐞𝐫𝐞 𝐭𝐨 𝐆𝐞𝐭 𝐘𝐨𝐮𝐫 𝐅𝐢𝐥𝐞]({link})",
