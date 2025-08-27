@@ -8,7 +8,6 @@ API_ID = int(os.getenv("API_ID", 12870719))
 API_HASH = os.getenv("API_HASH", "aec3e63c5538ca578429174d6769b3ac")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "8328426081:AAGo_cgQWL2_qGQW2ibGyD_tJFud-Th-cyc")
 ADMIN_ID = int(os.getenv("ADMIN_ID", 7202273962))
-LOG_CHANNEL = int(os.getenv("LOG_CHANNEL", -1002649126743))
 
 # 🧠 User Database
 users = set()
