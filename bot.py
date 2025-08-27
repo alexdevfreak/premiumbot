@@ -105,5 +105,12 @@ async def reject(_, cb):
     await cb.answer("User rejected ❌")
 
 # 🛠 /support
+# 🛠 /support
 @app.on_message(filters.command("support") & filters.private)
-async def support(_,
+async def support(_, m: Message):
+    await m.reply_text(
+        "📨 Msɢ ʜᴇʀᴇ ᴛᴏ ᴄʜᴀᴛ ᴡɪᴛʜ ᴛʜᴇ ᴀᴅᴍɪɴ",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
+        ])
+    )
