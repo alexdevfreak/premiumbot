@@ -9,14 +9,15 @@ API_HASH = os.getenv("API_HASH", "aec3e63c5538ca578429174d6769b3ac")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "8328426081:AAGo_cgQWL2_qGQW2ibGyD_tJFud-Th-cyc")
 ADMIN_ID = int(os.getenv("ADMIN_ID", 7202273962))
 
-# 🧠 User Database
+# 🧠 In-memory user tracking
 users = set()
+pending_verification = set()
 
 # 🚀 Start Bot
 app = Client("premium_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # 👋 /start
-@app.on_message(filters.command("start"))
+@app.on_message(filters.command("start") & filters.private)
 async def start(_, m: Message):
     users.add(m.from_user.id)
     await m.reply_text(
@@ -39,12 +40,19 @@ async def pay_now(_, cb):
 
 @app.on_callback_query(filters.regex("payment_done"))
 async def payment_done(_, cb):
-    await cb.message.reply_text("📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ.")
+    pending_verification.add(cb.from_user.id)
+    await cb.message.reply_text(
+        "📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ ʜᴇʀᴇ."
+    )
 
 # 📸 Screenshot Handler
-@app.on_message(filters.photo)
+@app.on_message(filters.photo & filters.private)
 async def handle_screenshot(_, m: Message):
     user = m.from_user
+    if user.id not in pending_verification or m.forward_date:
+        return
+
+    pending_verification.discard(user.id)
     time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     caption = (
         f"🧾 Pᴀʏᴍᴇɴᴛ Sᴄʀᴇᴇɴsʜᴏᴛ\n\n"
@@ -53,7 +61,16 @@ async def handle_screenshot(_, m: Message):
         f"🆔 ID: {user.id}\n"
         f"⏰ Tɪᴍᴇ: {time_sent}"
     )
+
     await m.forward(ADMIN_ID)
+
+    await m.reply_text(
+        "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘʟᴏᴀᴅᴇᴅ!\n\n🕵️‍♂️ Iᴛ ʜᴀs ʙᴇᴇɴ ғᴏʀᴡᴀʀᴅᴇᴅ ᴛᴏ ᴛʜᴇ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ ᴘᴀᴛɪᴇɴᴛʟʏ.",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
+        ])
+    )
+
     await app.send_message(
         ADMIN_ID,
         caption,
@@ -64,7 +81,6 @@ async def handle_screenshot(_, m: Message):
             ]
         ])
     )
-    await m.reply("📨 Sᴄʀᴇᴇɴsʜᴏᴛ sᴇɴᴛ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.")
 
 # ✅ Admin Approval
 @app.on_callback_query(filters.regex("approve_"))
@@ -84,39 +100,10 @@ async def reject(_, cb):
     user_id = int(cb.data.split("_")[1])
     await app.send_message(
         user_id,
-        "❌ Sᴏʀʀʏ, ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ᴡᴀs ɴᴏᴛ ᴠᴀʟɪᴅᴀᴛᴇᴅ. Pʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ."
+        "❌ Sᴏʀʀʏ, ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ᴡᴀs ɴᴏᴛ ᴠᴀʟɪᴅᴀᴛᴇᴅ.\n🆘 Pʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ ғᴏʀ ᴀssɪsᴛᴀɴᴄᴇ."
     )
     await cb.answer("User rejected ❌")
 
 # 🛠 /support
-@app.on_message(filters.command("support"))
-async def support(_, m: Message):
-    await m.reply_text(
-        "📨 Msɢ ʜᴇʀᴇ ᴛᴏ ᴄʜᴀᴛ ᴡɪᴛʜ ᴛʜᴇ ᴀᴅᴍɪɴ",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
-        ])
-    )
-
-# 📢 /broadcast (admin only)
-@app.on_message(filters.command("broadcast") & filters.user(ADMIN_ID))
-async def broadcast(_, m: Message):
-    if not m.reply_to_message:
-        return await m.reply("📌 Rᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ.")
-    count = 0
-    for uid in users:
-        try:
-            await app.copy_message(uid, m.chat.id, m.reply_to_message.id)
-            count += 1
-        except:
-            continue
-    await m.reply(f"✅ Bʀᴏᴀᴅᴄᴀsᴛ sᴇɴᴛ ᴛᴏ {count} ᴜsᴇʀs.")
-
-# 👥 /users
-@app.on_message(filters.command("users"))
-async def user_count(_, m: Message):
-    await m.reply(f"👥 Tᴏᴛᴀʟ Rᴇɢɪsᴛᴇʀᴇᴅ Uѕᴇʀs: {len(users)}")
-
-# 🟢 Run Bot
-print("🤖 Pʀᴇᴍɪᴜᴍ Bᴏᴛ Rᴜɴɴɪɴɢ...")
-app.run()
+@app.on_message(filters.command("support") & filters.private)
+async def support(_,
