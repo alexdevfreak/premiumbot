@@ -3,11 +3,7 @@ from datetime import datetime
 from collections import defaultdict
 
 from pyrogram import Client, filters
-from pyrogram.types import (
-    Message,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-)
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 🔑 Env Vars (set these in your environment)
@@ -16,6 +12,9 @@ API_ID = int(os.getenv("API_ID", 123456))
 API_HASH = os.getenv("API_HASH", "your_api_hash_here")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "your_bot_token_here")
 ADMIN_ID = int(os.getenv("ADMIN_ID", 123456789))
+
+# Replace this with a valid direct image URL or a Telegram file_id
+QR_IMAGE_URL = os.getenv("QR_IMAGE_URL", "https://example.com/qr.jpg")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 🧠 In-memory data (resets on restart)
@@ -38,18 +37,24 @@ def today_str() -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("start") & filters.private)
 async def start(_, m: Message):
+    if not m.from_user:
+        return
     users.add(m.from_user.id)
 
+    text = (
+        "👋 WELCOME!\n\n"
+        "💖 PERMANENT MEMBERSHIP – ~₹999~ (DISCOUNTED) ₹499 ⭐\n\n"
+        "✅ Direct videos uploaded\n"
+        "✅ Daily new updates\n"
+        "✅ 10,000+ videos already\n"
+        "❌ No ads | No links\n\n"
+        "⚠ Check the demo channel before buying."
+    )
+
     await m.reply_text(
-        "👋 Wᴇʟᴄᴏᴍᴇ!\n\n"
-        "💖 **Pᴇʀᴍᴀɴᴇɴᴛ Mᴇᴍʙᴇʀsʜɪᴘ – ~₹999~ (Dɪsᴄᴏᴜɴᴛᴇᴅ) ₹499 ⭐**\n\n"
-        "✅ Dɪʀᴇᴄᴛ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
-        "✅ Dᴀɪʟʏ Nᴇᴡ Uᴘᴅᴀᴛᴇs\n"
-        "✅ 10,000+ Vɪᴅᴇᴏs Aʟʀᴇᴀᴅʏ\n"
-        "❌ Nᴏ Aᴅs | Nᴏ Lɪɴᴋs\n\n"
-        "⚠ Cʜᴇᴄᴋ ᴛʜᴇ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ ʙᴇғᴏʀᴇ ʙᴜʏɪɴɢ.",
+        text,
         reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("💳 Pᴀʏ ₹499", callback_data="pay_now")]]
+            [[InlineKeyboardButton("💳 Pay ₹499", callback_data="pay_now")]]
         ),
         disable_web_page_preview=True,
     )
@@ -59,21 +64,31 @@ async def start(_, m: Message):
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex(r"^pay_now$"))
 async def pay_now(_, cb):
-    # Only answer once; do not spam extra messages
     await cb.answer()
-    # Send a single QR instruction card
-    await cb.message.reply_photo(
-        photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",  # replace with your QR if needed
-        caption=(
-            "💎 **PAY ₹499 TO GET PREMIUM ACCESS**\n\n"
-            "**Scan QR or Pay via UPI:**\n"
-            "`BHARATPE.8L0D0N9B3N26276@fbpe`\n\n"
-            "> ᴀꜰᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ✅"
-        ),
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("✅ Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ", callback_data="payment_done")]]
-        ),
-    )
+    try:
+        caption = (
+            "PAY ₹499 TO GET PREMIUM ACCESS\n\n"
+            "Scan QR or pay via UPI:\n"
+            "BHARATPE.8L0D0N9B3N26276@fbpe\n\n"
+            "After payment, please send a screenshot of your payment receipt here."
+        )
+        await cb.message.reply_photo(
+            photo=QR_IMAGE_URL,
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("✅ Payment Done", callback_data="payment_done")]]
+            ),
+        )
+    except Exception:
+        # fallback: send as text if photo fails
+        await cb.message.reply_text(
+            "PAY ₹499 TO GET PREMIUM ACCESS\n\n"
+            "UPI: BHARATPE.8L0D0N9B3N26276@fbpe\n\n"
+            "After payment, send a screenshot here.",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("✅ Payment Done", callback_data="payment_done")]]
+            ),
+        )
 
 @app.on_callback_query(filters.regex(r"^payment_done$"))
 async def payment_done(_, cb):
@@ -82,15 +97,15 @@ async def payment_done(_, cb):
 
     # Avoid duplicate prompts: if already queued or decided, don't re-add
     if uid in verified_or_rejected:
-        return await cb.message.reply_text("ℹ️ Yᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʜᴀs ᴀʟʀᴇᴀᴅʏ ʙᴇᴇɴ ʀᴇᴠɪᴇᴡᴇᴅ.")
+        return await cb.message.reply_text("Info: Your payment was already reviewed.")
 
     if uid not in pending_verification:
         pending_verification.add(uid)
         await cb.message.reply_text(
-            "📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ ʜᴇʀᴇ."
+            "Please send a screenshot of your payment receipt here (do not forward)."
         )
     else:
-        await cb.message.reply_text("⏳ Aʟʀᴇᴀᴅʏ ᴍᴀʀᴋᴇᴅ. Sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ.")
+        await cb.message.reply_text("You are already marked as pending. Please send the screenshot.")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 📸 Screenshot Handler
@@ -98,6 +113,8 @@ async def payment_done(_, cb):
 @app.on_message(filters.photo & filters.private)
 async def handle_screenshot(_, m: Message):
     user = m.from_user
+    if not user:
+        return
 
     # Ignore if not in verification queue or if the photo is forwarded
     if user.id not in pending_verification or m.forward_date:
@@ -108,30 +125,46 @@ async def handle_screenshot(_, m: Message):
 
     time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     caption = (
-        f"🧾 **Pᴀʏᴍᴇɴᴛ Sᴄʀᴇᴇɴsʜᴏᴛ**\n\n"
-        f"👤 Nᴀᴍᴇ: {user.first_name}\n"
-        f"🔗 Uѕᴇʀɴᴀᴍᴇ: @{user.username or 'N/A'}\n"
-        f"🆔 ID: {user.id}\n"
-        f"⏰ Tɪᴍᴇ: {time_sent}"
+        f"PAYMENT SCREENSHOT\n\n"
+        f"Name: {user.first_name}\n"
+        f"Username: @{user.username or 'N/A'}\n"
+        f"ID: {user.id}\n"
+        f"Time: {time_sent}"
     )
 
     # Send to admin with Admin-only buttons
-    await app.send_photo(
-        ADMIN_ID,
-        photo=m.photo.file_id,
-        caption=caption,
-        reply_markup=InlineKeyboardMarkup(
-            [[
-                InlineKeyboardButton("✅ Aᴘᴘʀᴏᴠᴇ", callback_data=f"approve_{user.id}"),
-                InlineKeyboardButton("❌ Rᴇᴊᴇᴄᴛ", callback_data=f"reject_{user.id}")
-            ]]
-        ),
-    )
+    try:
+        await app.send_photo(
+            ADMIN_ID,
+            photo=m.photo.file_id,
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup(
+                [[
+                    InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user.id}"),
+                    InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user.id}")
+                ]]
+            ),
+        )
+    except Exception:
+        # If admin photo send fails, send message instead
+        try:
+            await app.send_message(
+                ADMIN_ID,
+                caption,
+                reply_markup=InlineKeyboardMarkup(
+                    [[
+                        InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user.id}"),
+                        InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user.id}")
+                    ]]
+                ),
+            )
+        except Exception:
+            pass
 
     await m.reply_text(
-        "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ sᴇɴᴛ ᴛᴏ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n\n⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ.",
+        "Your screenshot has been sent to admin for verification. Please wait a little while.",
         reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="https://t.me/alex_clb")]]
+            [[InlineKeyboardButton("Contact Support", url="https://t.me/alex_clb")]]
         ),
     )
 
@@ -140,15 +173,14 @@ async def handle_screenshot(_, m: Message):
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_callback_query(filters.user(ADMIN_ID) & filters.regex(r"^approve_\d+$"))
 async def approve(_, cb):
-    await cb.answer("Approved ✅", show_alert=False)
+    await cb.answer("Approved", show_alert=False)
     user_id = int(cb.data.split("_")[1])
 
     # Avoid duplicate approvals
     if user_id in verified_or_rejected:
-        # remove buttons to avoid confusion
         try:
             await cb.message.edit_reply_markup(None)
-        except:
+        except Exception:
             pass
         return
 
@@ -156,12 +188,19 @@ async def approve(_, cb):
     verified_or_rejected.add(user_id)
     pending_verification.discard(user_id)
 
-    # Add buyer info
-    user = await app.get_users(user_id)
+    # Try fetching user info; if it fails, still store ID and date
+    try:
+        user = await app.get_users(user_id)
+        name = user.first_name if getattr(user, "first_name", None) else "Unknown"
+        username = user.username if getattr(user, "username", None) else None
+    except Exception:
+        name = "Unknown"
+        username = None
+
     premium_users.append({
-        "id": user.id,
-        "name": user.first_name,
-        "username": user.username,
+        "id": user_id,
+        "name": name,
+        "username": username,
         "date": today_str(),
     })
 
@@ -169,18 +208,18 @@ async def approve(_, cb):
     try:
         await app.send_message(
             user_id,
-            "🎉 Cᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! 💎 Yᴏᴜʀ Pʀᴇᴍɪᴜᴍ Aᴄᴄᴇss Hᴀs Bᴇᴇɴ Aᴄᴛɪᴠᴀᴛᴇᴅ\n📂 Jᴏɪɴ Oᴜʀ Sᴇᴄʀᴇᴛ Cʜᴀɴɴᴇʟ",
+            "Congratulations! Your premium access has been activated. Join the premium channel.",
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("🔗 Jᴏɪɴ Pʀᴇᴍɪᴜᴍ Cʜᴀɴɴᴇʟ", url="https://t.me/Alex_clb")]]
+                [[InlineKeyboardButton("Join Premium Channel", url="https://t.me/Alex_clb")]]
             ),
         )
-    except:
+    except Exception:
         pass
 
     # Remove buttons on the admin card (so it can’t be clicked again)
     try:
         await cb.message.edit_reply_markup(None)
-    except:
+    except Exception:
         pass
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -188,7 +227,7 @@ async def approve(_, cb):
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_callback_query(filters.user(ADMIN_ID) & filters.regex(r"^reject_\d+$"))
 async def reject(_, cb):
-    await cb.answer("Rejected ❌", show_alert=False)
+    await cb.answer("Rejected", show_alert=False)
     user_id = int(cb.data.split("_")[1])
 
     # Mark final state
@@ -198,18 +237,18 @@ async def reject(_, cb):
     try:
         await app.send_message(
             user_id,
-            "❌ Pᴀʏᴍᴇɴᴛ ᴄᴏᴜʟᴅɴ'ᴛ ʙᴇ ᴠᴇʀɪғɪᴇᴅ.\n\nPʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.",
+            "Sorry, your payment could not be verified. Please contact support.",
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="https://t.me/alex_clb")]]
+                [[InlineKeyboardButton("Contact Support", url="https://t.me/alex_clb")]]
             ),
         )
-    except:
+    except Exception:
         pass
 
     # Remove buttons on the admin card
     try:
         await cb.message.edit_reply_markup(None)
-    except:
+    except Exception:
         pass
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -218,34 +257,32 @@ async def reject(_, cb):
 @app.on_message(filters.command("broadcast") & filters.user(ADMIN_ID))
 async def broadcast(_, m: Message):
     if not m.reply_to_message:
-        return await m.reply("📌 Rᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ.")
+        return await m.reply("Reply to a message to broadcast it.")
 
     count = 0
     for uid in list(users):
         try:
             await app.copy_message(uid, m.chat.id, m.reply_to_message.id)
             count += 1
-        except:
-            # silently skip users who blocked the bot or failed delivery
+        except Exception:
             continue
 
-    await m.reply(f"✅ Bʀᴏᴀᴅᴄᴀsᴛ sᴇɴᴛ ᴛᴏ {count} ᴜsᴇʀs.")
+    await m.reply(f"Broadcast sent to {count} users.")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 👥 /users (ADMIN ONLY)
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("users") & filters.user(ADMIN_ID))
 async def user_count(_, m: Message):
-    await m.reply(f"👥 Tᴏᴛᴀʟ Uѕᴇʀs: {len(users)}")
+    await m.reply(f"Total users: {len(users)}")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 📊 /listp – Premium Buyers Report (ADMIN ONLY)
-#   - Shows per-day group + a "Today" quick counter
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("listp") & filters.user(ADMIN_ID))
 async def list_premium(_, m: Message):
     if not premium_users:
-        return await m.reply("📊 Nᴏ ᴘʀᴇᴍɪᴜᴍ ᴘᴜʀᴄʜᴀsᴇs ʏᴇᴛ.")
+        return await m.reply("No premium purchases yet.")
 
     # Group by date
     stats = defaultdict(list)
@@ -256,16 +293,16 @@ async def list_premium(_, m: Message):
     today_count = len(stats.get(today, []))
 
     text_lines = []
-    text_lines.append("📊 **Premium Buyers Report**")
-    text_lines.append(f"🗓 **Today ({today})** → **{today_count}** user(s)\n")
+    text_lines.append("Premium Buyers Report")
+    text_lines.append(f"Today ({today}) → {today_count} user(s)\n")
 
     # Sort dates descending for recent-first report
     for date in sorted(stats.keys(), reverse=True):
         buyers = stats[date]
-        text_lines.append(f"📅 {date} → {len(buyers)} user(s)")
+        text_lines.append(f"{date} → {len(buyers)} user(s)")
         for b in buyers:
             uname = f"@{b['username']}" if b.get("username") else "N/A"
-            text_lines.append(f"   └ {b['name']} ({uname}) [ID: {b['id']}]")
+            text_lines.append(f"  - {b['name']} ({uname}) [ID: {b['id']}]")
         text_lines.append("")  # blank line
 
     await m.reply("\n".join(text_lines))
@@ -276,9 +313,9 @@ async def list_premium(_, m: Message):
 @app.on_message(filters.command("support") & filters.private)
 async def support(_, m: Message):
     await m.reply_text(
-        "📨 Cʜᴀᴛ ᴡɪᴛʜ ᴀᴅᴍɪɴ ᴅɪʀᴇᴄᴛʟʏ.\n\n🆘 Fᴏʀ ʜᴇʟᴘ, ᴄʟɪᴄᴋ ʙᴇʟᴏᴡ.",
+        "Chat with admin directly for support.",
         reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("🆘 Sᴜᴘᴘᴏʀᴛ", url="https://t.me/alex_clb")]]
+            [[InlineKeyboardButton("Support", url="https://t.me/alex_clb")]]
         ),
         disable_web_page_preview=True,
     )
@@ -286,5 +323,6 @@ async def support(_, m: Message):
 # ─────────────────────────────────────────────────────────────────────────────
 # 🟢 Run Bot
 # ─────────────────────────────────────────────────────────────────────────────
-print("🤖 Pʀᴇᴍɪᴜᴍ Bᴏᴛ Rᴜɴɴɪɴɢ...")
-app.run()
+if __name__ == "__main__":
+    print("Premium bot running...")
+    app.run()
