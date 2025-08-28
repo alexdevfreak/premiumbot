@@ -3,11 +3,11 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime
 
-# 🔑 Environment Variables
-API_ID = int(os.getenv("API_ID", 12870719))
-API_HASH = os.getenv("API_HASH", "aec3e63c5538ca578429174d6769b3ac")
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8328426081:AAGo_cgQWL2_qGQW2ibGyD_tJFud-Th-cyc")
-ADMIN_ID = int(os.getenv("ADMIN_ID", 7202273962))
+# 🔑 Environment Variables (Heroku/Render will provide these)
+API_ID = int(os.getenv("API_ID", 123456))  # replace with real or set in env
+API_HASH = os.getenv("API_HASH", "your_api_hash_here")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "your_bot_token_here")
+ADMIN_ID = int(os.getenv("ADMIN_ID", 123456789))  # your Telegram ID
 
 # 🧠 In-memory user tracking
 users = set()
@@ -28,7 +28,7 @@ async def start(_, m: Message):
         "✅ Dᴀɪʟʏ Nᴇᴡ Uᴘᴅᴀᴛᴇs\n"
         "✅ Aʟʀᴇᴀᴅʏ 10,000+ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
         "❌ Nᴏ Aᴅs | Nᴏ Lɪɴᴋs\n\n"
-        "⚠ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ – Aʟʟ ᴠɪᴅᴇᴏs ᴀɴᴅ ᴄᴏɴᴛᴇɴᴛs ᴡɪʟʟ ʙᴇ ᴏɴ ᴛʜᴇ Cʜᴀɴɴᴇʟ ᴛᴏ ᴄʜᴇᴄᴋ ʙᴇғᴏʀᴇ ᴘᴜʀᴄʜᴀsɪɴɢ.",
+        "⚠ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ – Cʜᴇᴄᴋ ʙᴇғᴏʀᴇ ᴘᴜʀᴄʜᴀsɪɴɢ.",
         parse_mode="markdown"
     )
 
@@ -44,7 +44,7 @@ async def start(_, m: Message):
 @app.on_callback_query(filters.regex("pay_now"))
 async def pay_now(_, cb):
     await cb.message.reply_photo(
-        photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",
+        photo="https://i.ibb.co/YycYVgS/qr-code-sample.jpg",  # ✅ working QR sample
         caption="📸 Sᴄᴀɴ Qʀ ᴄᴏᴅᴇ ᴛᴏ ᴘᴀʏ ₹499.\n\nAғᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, ᴄʟɪᴄᴋ 'Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ'",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ", callback_data="payment_done")]
@@ -78,9 +78,9 @@ async def handle_screenshot(_, m: Message):
     await m.forward(ADMIN_ID)
 
     await m.reply_text(
-        "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘʟᴏᴀᴅᴇᴅ!\n\n🕵️‍♂️ Iᴛ ʜᴀs ʙᴇᴇɴ ғᴏʀᴡᴀʀᴅᴇᴅ ᴛᴏ ᴛʜᴇ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ ᴘᴀᴛɪᴇɴᴛʟʏ.",
+        "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘʟᴏᴀᴅᴇᴅ!\n\n🕵️‍♂️ Fᴏʀᴡᴀʀᴅᴇᴅ ᴛᴏ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ.",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
+            [InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb")]
         ])
     )
 
@@ -116,9 +116,9 @@ async def reject(_, cb):
     user_id = int(cb.data.split("_")[1])
     await app.send_message(
         user_id,
-        "❌ Yᴏᴜʀ Pᴀʏᴍᴇɴᴛ ᴄᴏᴜʟᴅ ɴᴏᴛ ʙᴇ ᴠᴇʀɪғɪᴇᴅ. Pʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.",
+        "❌ Pᴀʏᴍᴇɴᴛ ᴄᴏᴜʟᴅɴ’ᴛ ʙᴇ ᴠᴇʀɪғɪᴇᴅ. Pʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
+            [InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb")]
         ])
     )
     await cb.answer("User rejected ❌")
@@ -142,16 +142,16 @@ async def broadcast(_, m: Message):
 # 👥 /users
 @app.on_message(filters.command("users") & filters.user(ADMIN_ID))
 async def user_count(_, m: Message):
-    await m.reply(f"👥 Tᴏᴛᴀʟ Rᴇɢɪsᴛᴇʀᴇᴅ Uѕᴇʀs: {len(users)}")
+    await m.reply(f"👥 Tᴏᴛᴀʟ Uѕᴇʀs: {len(users)}")
 
 
 # 🆘 /support
 @app.on_message(filters.command("support") & filters.private)
 async def support(_, m: Message):
     await m.reply_text(
-        "📨 Sᴇɴᴅ ᴀ ᴍᴇssᴀɢᴇ ʜᴇʀᴇ ᴛᴏ ᴄʜᴀᴛ ᴅɪʀᴇᴄᴛʟʏ ᴡɪᴛʜ ᴛʜᴇ ᴀᴅᴍɪɴ.\n\n🆘 Fᴏʀ ᴀɴʏ ʜᴇʟᴘ, ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ.",
+        "📨 Cʜᴀᴛ ᴡɪᴛʜ ᴀᴅᴍɪɴ ᴅɪʀᴇᴄᴛʟʏ.\n\n🆘 Fᴏʀ ʜᴇʟᴘ, ᴄʟɪᴄᴋ ʙᴇʟᴏᴡ.",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🆘 Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
+            [InlineKeyboardButton("🆘 Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb")]
         ])
     )
 
@@ -159,4 +159,3 @@ async def support(_, m: Message):
 # 🟢 Run Bot
 print("🤖 Pʀᴇᴍɪᴜᴍ Bᴏᴛ Rᴜɴɴɪɴɢ...")
 app.run()
-
