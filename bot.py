@@ -16,21 +16,21 @@ pending_verification = set()
 # 🚀 Start Bot
 app = Client("premium_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
+
 # 👋 /start
 @app.on_message(filters.command("start") & filters.private)
 async def start(_, m: Message):
     users.add(m.from_user.id)
 
-  await m.reply_text(
-    "💖 Pᴇʀᴍᴀɴᴇɴᴛ Mᴇᴍʙᴇʀsʜɪᴘ – ~₹999~ (𝐃ɪsᴄᴏᴜɴᴛᴇᴅ) ₹499 ⭐\n\n"
-    "✅ Dɪʀᴇᴄᴛ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
-    "✅ Dᴀɪʟʏ Nᴇᴡ Uᴘᴅᴀᴛᴇs\n"
-    "✅ Aʟʀᴇᴀᴅʏ 10,000+ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
-    "❌ Nᴏ Aᴅs | Nᴏ Lɪɴᴋs\n\n"
-    "⚠ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ – Aʟʟ ᴠɪᴅᴇᴏs ᴀɴᴅ ᴄᴏɴᴛᴇɴᴛs ᴡɪʟʟ ʙᴇ ᴏɴ ᴛʜᴇ Cʜᴀɴɴᴇʟ ᴛᴏ ᴄʜᴇᴄᴋ ʙᴇғᴏʀᴇ ᴘᴜʀᴄʜᴀsɪɴɢ.",
-    parse_mode="markdown"
-)
-
+    await m.reply_text(
+        "💖 Pᴇʀᴍᴀɴᴇɴᴛ Mᴇᴍʙᴇʀsʜɪᴘ – ~₹999~ (𝐃ɪsᴄᴏᴜɴᴛᴇᴅ) ₹499 ⭐\n\n"
+        "✅ Dɪʀᴇᴄᴛ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
+        "✅ Dᴀɪʟʏ Nᴇᴡ Uᴘᴅᴀᴛᴇs\n"
+        "✅ Aʟʀᴇᴀᴅʏ 10,000+ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
+        "❌ Nᴏ Aᴅs | Nᴏ Lɪɴᴋs\n\n"
+        "⚠ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ – Aʟʟ ᴠɪᴅᴇᴏs ᴀɴᴅ ᴄᴏɴᴛᴇɴᴛs ᴡɪʟʟ ʙᴇ ᴏɴ ᴛʜᴇ Cʜᴀɴɴᴇʟ ᴛᴏ ᴄʜᴇᴄᴋ ʙᴇғᴏʀᴇ ᴘᴜʀᴄʜᴀsɪɴɢ.",
+        parse_mode="markdown"
+    )
 
     await m.reply_text(
         "👋 Wᴇʟᴄᴏᴍᴇ! 💎 Bᴜʏ Pʀᴇᴍɪᴜᴍ ғᴏʀ ᴊᴏɪɴɪɴɢ ᴏᴜʀ sᴇᴄʀᴇᴛ ᴄʜᴀɴɴᴇʟ 💰 Pʀɪᴄᴇ: ₹499",
@@ -38,6 +38,7 @@ async def start(_, m: Message):
             [InlineKeyboardButton("💳 Pᴀʏ ₹499", callback_data="pay_now")]
         ])
     )
+
 
 # 💳 Payment Flow
 @app.on_callback_query(filters.regex("pay_now"))
@@ -50,10 +51,12 @@ async def pay_now(_, cb):
         ])
     )
 
+
 @app.on_callback_query(filters.regex("payment_done"))
 async def payment_done(_, cb):
     pending_verification.add(cb.from_user.id)
     await cb.message.reply_text("📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ ʜᴇʀᴇ.")
+
 
 # 📸 Screenshot Handler
 @app.on_message(filters.photo & filters.private)
@@ -92,6 +95,7 @@ async def handle_screenshot(_, m: Message):
         ])
     )
 
+
 # ✅ Admin Approval
 @app.on_callback_query(filters.regex("approve_"))
 async def approve(_, cb):
@@ -105,6 +109,7 @@ async def approve(_, cb):
     )
     await cb.answer("User approved ✅")
 
+
 # ❌ Admin Rejection
 @app.on_callback_query(filters.regex("reject_"))
 async def reject(_, cb):
@@ -117,6 +122,7 @@ async def reject(_, cb):
         ])
     )
     await cb.answer("User rejected ❌")
+
 
 # 📢 /broadcast (admin only)
 @app.on_message(filters.command("broadcast") & filters.user(ADMIN_ID))
@@ -132,10 +138,12 @@ async def broadcast(_, m: Message):
             continue
     await m.reply(f"✅ Bʀᴏᴀᴅᴄᴀsᴛ sᴇɴᴛ ᴛᴏ {count} ᴜsᴇʀs.")
 
+
 # 👥 /users
 @app.on_message(filters.command("users") & filters.user(ADMIN_ID))
 async def user_count(_, m: Message):
     await m.reply(f"👥 Tᴏᴛᴀʟ Rᴇɢɪsᴛᴇʀᴇᴅ Uѕᴇʀs: {len(users)}")
+
 
 # 🆘 /support
 @app.on_message(filters.command("support") & filters.private)
@@ -147,6 +155,8 @@ async def support(_, m: Message):
         ])
     )
 
+
 # 🟢 Run Bot
 print("🤖 Pʀᴇᴍɪᴜᴍ Bᴏᴛ Rᴜɴɴɪɴɢ...")
 app.run()
+
