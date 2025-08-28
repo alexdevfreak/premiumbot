@@ -20,10 +20,23 @@ app = Client("premium_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKE
 @app.on_message(filters.command("start") & filters.private)
 async def start(_, m: Message):
     users.add(m.from_user.id)
+
+    # 💖 Membership Info
     await m.reply_text(
-        "👋 Wᴇʟᴄᴏᴍᴇ! 💎 Bᴜʏ Pʀᴇᴍɪᴜᴍ ғᴏʀ ᴊᴏɪɴɪɴɢ ᴏᴜʀ sᴇᴄʀᴇᴛ ᴄʜᴀɴɴᴇʟ 💰 Pʀɪᴄᴇ: 499",
+        "💖 Pᴇʀᴍᴀɴᴇɴᴛ Mᴇᴍʙᴇʀsʜɪᴘ – ~₹999~ (𝐃ɪsᴄᴏᴜɴᴛᴇᴅ) ₹499 ⭐\n\n"
+        "✅ Dɪʀᴇᴄᴛ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
+        "✅ Dᴀɪʟʏ Nᴇᴡ Uᴘᴅᴀᴛᴇs\n"
+        "✅ Aʟʀᴇᴀᴅʏ 10,000+ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
+        "❌ Nᴏ Aᴅs | Nᴏ Lɪɴᴋs\n\n"
+        "⚠ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ – Aʟʟ ᴠɪᴅᴇᴏs ᴀɴᴅ ᴄᴏɴᴛᴇɴᴛs ᴡɪʟʟ ʙᴇ ᴏɴ ᴛʜᴇ Cʜᴀɴɴᴇʟ ᴛᴏ ᴄʜᴇᴄᴋ ʙᴇғᴏʀᴇ ᴘᴜʀᴄʜᴀsɪɴɢ.",
+        parse_mode="Markdown"
+    )
+
+    # 💳 Payment Prompt
+    await m.reply_text(
+        "👋 Wᴇʟᴄᴏᴍᴇ! 💎 Bᴜʏ Pʀᴇᴍɪᴜᴍ ғᴏʀ ᴊᴏɪɴɪɴɢ ᴏᴜʀ sᴇᴄʀᴇᴛ ᴄʜᴀɴɴᴇʟ 💰 Pʀɪᴄᴇ: ₹499",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("💳 Pᴀʏ 499", callback_data="pay_now")]
+            [InlineKeyboardButton("💳 Pᴀʏ ₹499", callback_data="pay_now")]
         ])
     )
 
@@ -32,7 +45,7 @@ async def start(_, m: Message):
 async def pay_now(_, cb):
     await cb.message.reply_photo(
         photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",
-        caption="📸 Sᴄᴀɴ Qʀ ᴄᴏᴅᴇ ᴛᴏ ᴘᴀʏ 499.\n\nAғᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, ᴄʟɪᴄᴋ 'Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ'",
+        caption="📸 Sᴄᴀɴ Qʀ ᴄᴏᴅᴇ ᴛᴏ ᴘᴀʏ ₹499.\n\nAғᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, ᴄʟɪᴄᴋ 'Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ'",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ", callback_data="payment_done")]
         ])
@@ -41,9 +54,7 @@ async def pay_now(_, cb):
 @app.on_callback_query(filters.regex("payment_done"))
 async def payment_done(_, cb):
     pending_verification.add(cb.from_user.id)
-    await cb.message.reply_text(
-        "📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ ʜᴇʀᴇ."
-    )
+    await cb.message.reply_text("📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ ʜᴇʀᴇ.")
 
 # 📸 Screenshot Handler
 @app.on_message(filters.photo & filters.private)
@@ -92,9 +103,7 @@ async def approve(_, cb):
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🔗 Jᴏɪɴ Pʀᴇᴍɪᴜᴍ Cʜᴀɴɴᴇʟ", url="https://t.me/Alex_clb")]
         ])
-    )
-    await cb.answer("User approved ✅")
-
+   # ❌ Admin Rejection
 @app.on_callback_query(filters.regex("reject_"))
 async def reject(_, cb):
     user_id = int(cb.data.split("_")[1])
@@ -114,5 +123,46 @@ async def support(_, m: Message):
         ])
     )
 
-print("🤖 Bᴏᴛ Rᴜɴɴɪɴɢ...")
+# ❌ Admin Rejection
+@app.on_callback_query(filters.regex("reject_"))
+async def reject(_, cb):
+    user_id = int(cb.data.split("_")[1])
+    await app.send_message(
+        user_id,
+        "❌ Sᴏʀʀʏ, ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ᴡᴀs ɴᴏᴛ ᴠᴀʟɪᴅᴀᴛᴇᴅ.\n🆘 Pʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ ғᴏʀ ᴀssɪsᴛᴀɴᴄᴇ."
+    )
+    await cb.answer("User rejected ❌")
+
+# 🛠 /support
+@app.on_message(filters.command("support") & filters.private)
+async def support(_, m: Message):
+    await m.reply_text(
+        "📨 Sᴇɴᴅ ᴀ ᴍᴇssᴀɢᴇ ʜᴇʀᴇ ᴛᴏ ᴄʜᴀᴛ ᴅɪʀᴇᴄᴛʟʏ ᴡɪᴛʜ ᴛʜᴇ ᴀᴅᴍɪɴ.\n\n🆘 Fᴏʀ ᴀɴʏ ʜᴇʟᴘ, ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ.",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🆘 Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
+        ])
+    )
+
+# 📢 /broadcast (admin only)
+@app.on_message(filters.command("broadcast") & filters.user(ADMIN_ID))
+async def broadcast(_, m: Message):
+    if not m.reply_to_message:
+        return await m.reply("📌 Rᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ.")
+    count = 0
+    for uid in users:
+        try:
+            await app.copy_message(uid, m.chat.id, m.reply_to_message.id)
+            count += 1
+        except:
+            continue
+    await m.reply(f"✅ Bʀᴏᴀᴅᴄᴀsᴛ sᴇɴᴛ ᴛᴏ {count} ᴜsᴇʀs.")
+
+# 👥 /users
+@app.on_message(filters.command("users") & filters.user(ADMIN_ID))
+async def user_count(_, m: Message):
+    await m.reply(f"👥 Tᴏᴛᴀʟ Rᴇɢɪsᴛᴇʀᴇᴅ Uѕᴇʀs: {len(users)}")
+
+# 🟢 Run Bot
+print("🤖 Pʀᴇᴍɪᴜᴍ Bᴏᴛ Rᴜɴɴɪɴɢ...")
 app.run()
+
