@@ -63,7 +63,7 @@ async def pay_now(_, cb):
     await cb.answer()
     # Send a single QR instruction card
     await cb.message.reply_photo(
-        photo="https://envs.sh/tsw.jpg",  # replace with your QR if needed
+        photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",  # replace with your QR if needed
         caption=(
             "💎 **PAY ₹499 TO GET PREMIUM ACCESS**\n\n"
             "**Scan QR or Pay via UPI:**\n"
