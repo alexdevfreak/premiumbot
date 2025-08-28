@@ -25,6 +25,7 @@ users = set()                       # all users who hit /start
 pending_verification = set()        # users who clicked "Payment Done" and must send screenshot
 premium_users = []                  # list of dicts: {id, name, username, date}
 verified_or_rejected = set()        # users that already got a final decision (avoid re-approval)
+qr_sent_users = set()               # track users who already received QR to avoid duplicates
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 🚀 Start Bot
@@ -61,11 +62,19 @@ async def start(_, m: Message):
 @app.on_callback_query(filters.regex(r"^pay_now$"))
 async def pay_now(_, cb):
     try:
-        # Only answer once; do not spam extra messages
+        user_id = cb.from_user.id
+        
+        # Check if QR already sent to this user
+        if user_id in qr_sent_users:
+            await cb.answer("QR already sent! Please check above messages.", show_alert=True)
+            return
+            
         await cb.answer()
+        qr_sent_users.add(user_id)  # Mark as QR sent
+        
         # Send a single QR instruction card
         await cb.message.reply_photo(
-            photo="https://envs.sh/tsw.jpg",  # replace with your QR if needed
+            photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",
             caption=(
                 "💎 **PAY ₹499 TO GET PREMIUM ACCESS**\n\n"
                 "**Scan QR or Pay via UPI:**\n"
@@ -88,31 +97,40 @@ async def payment_done(_, cb):
 
         # Avoid duplicate prompts: if already queued or decided, don't re-add
         if uid in verified_or_rejected:
-            return await cb.message.reply_text("ℹ️ Yᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʜᴀs ᴀʟʀᴇᴀᴅʏ ʙᴇᴇɴ ʀᴇᴠɪᴇᴡᴇᴅ.")
+            return await cb.answer("ℹ️ Your payment has already been reviewed.", show_alert=True)
 
         if uid not in pending_verification:
             pending_verification.add(uid)
-            await cb.message.reply_text(
-                "📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ ʜᴇʀᴇ."
-            )
+            await cb.answer("📤 Now send your payment screenshot here.", show_alert=True)
         else:
-            await cb.message.reply_text("⏳ Aʟʀᴇᴀᴅʏ ᴍᴀʀᴋᴇᴅ. Sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ.")
+            await cb.answer("⏳ Already marked. Send your screenshot.", show_alert=True)
+            
     except Exception as e:
         print(f"Error in payment_done: {e}")
         await cb.answer("Error occurred. Please try again.", show_alert=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 📸 Screenshot Handler
+# 📸 Screenshot Handler (no double confirmation message)
 # ─────────────────────────────────────────────────────────────────────────────
+screenshot_processed = set()  # Track processed screenshots to avoid duplicates
+
 @app.on_message(filters.photo & filters.private)
 async def handle_screenshot(_, m: Message):
     try:
         user = m.from_user
-
-        # Ignore if not in verification queue or if the photo is forwarded
-        if user.id not in pending_verification or m.forward_date:
+        
+        # Create unique identifier for this screenshot
+        screenshot_id = f"{user.id}_{m.photo.file_id}"
+        
+        # Ignore if not in verification queue, forwarded, or already processed
+        if (user.id not in pending_verification or 
+            m.forward_date or 
+            screenshot_id in screenshot_processed):
             return
 
+        # Mark as processed to avoid duplicates
+        screenshot_processed.add(screenshot_id)
+        
         # Move out of pending list now that screenshot is received
         pending_verification.discard(user.id)
 
@@ -138,12 +156,14 @@ async def handle_screenshot(_, m: Message):
             ),
         )
 
+        # Send SINGLE confirmation message to user
         await m.reply_text(
             "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ sᴇɴᴛ ᴛᴏ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n\n⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ.",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="https://t.me/alex_clb")]]
             ),
         )
+        
     except Exception as e:
         print(f"Error in handle_screenshot: {e}")
         try:
@@ -162,7 +182,6 @@ async def approve(_, cb):
 
         # Avoid duplicate approvals
         if user_id in verified_or_rejected:
-            # remove buttons to avoid confusion
             try:
                 await cb.message.edit_reply_markup(None)
             except:
@@ -172,6 +191,7 @@ async def approve(_, cb):
         # Mark final state
         verified_or_rejected.add(user_id)
         pending_verification.discard(user_id)
+        qr_sent_users.discard(user_id)  # Reset for future purchases
 
         # Add buyer info - with better error handling
         try:
@@ -184,7 +204,6 @@ async def approve(_, cb):
             })
         except Exception as e:
             print(f"Error getting user info for {user_id}: {e}")
-            # Still add to premium users with basic info
             premium_users.append({
                 "id": user_id,
                 "name": "Unknown User",
@@ -204,7 +223,7 @@ async def approve(_, cb):
         except Exception as e:
             print(f"Error notifying user {user_id}: {e}")
 
-        # Remove buttons on the admin card (so it can't be clicked again)
+        # Remove buttons on the admin card
         try:
             await cb.message.edit_reply_markup(None)
         except Exception as e:
@@ -226,6 +245,7 @@ async def reject(_, cb):
         # Mark final state
         verified_or_rejected.add(user_id)
         pending_verification.discard(user_id)
+        qr_sent_users.discard(user_id)  # Reset for future attempts
 
         try:
             await app.send_message(
@@ -261,7 +281,6 @@ async def broadcast(_, m: Message):
         failed = 0
         total_users = len(users)
         
-        # Send progress message
         progress_msg = await m.reply(f"📤 Starting broadcast to {total_users} users...")
         
         for uid in list(users):
@@ -269,7 +288,6 @@ async def broadcast(_, m: Message):
                 await app.copy_message(uid, m.chat.id, m.reply_to_message.id)
                 count += 1
                 
-                # Update progress every 50 messages
                 if count % 50 == 0:
                     try:
                         await progress_msg.edit_text(f"📤 Broadcast progress: {count}/{total_users} sent...")
@@ -278,7 +296,6 @@ async def broadcast(_, m: Message):
                         
             except Exception as e:
                 failed += 1
-                # silently skip users who blocked the bot or failed delivery
                 continue
 
         await progress_msg.edit_text(f"✅ Bʀᴏᴀᴅᴄᴀsᴛ completed!\n📊 Sent: {count}\n❌ Failed: {failed}")
@@ -310,7 +327,6 @@ async def user_count(_, m: Message):
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 📊 /listp – Premium Buyers Report (ADMIN ONLY)
-#   - Shows per-day group + a "Today" quick counter
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("listp") & filters.user(ADMIN_ID))
 async def list_premium(_, m: Message):
@@ -338,12 +354,10 @@ async def list_premium(_, m: Message):
                 uname = f"@{b['username']}" if b.get("username") else "N/A"
                 name = b.get('name', 'N/A') or 'N/A'
                 text_lines.append(f"   └ {name} ({uname}) [ID: {b['id']}]")
-            text_lines.append("")  # blank line
+            text_lines.append("")
 
-        # Split message if too long
         full_text = "\n".join(text_lines)
         if len(full_text) > 4096:
-            # Send in chunks
             chunks = []
             current_chunk = ""
             
