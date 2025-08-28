@@ -28,7 +28,6 @@ async def start(_, m: Message):
         "✅ Aʟʀᴇᴀᴅʏ 10,000+ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
         "❌ Nᴏ Aᴅs | Nᴏ Lɪɴᴋs\n\n"
         "⚠ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ – Cʜᴇᴄᴋ ʙᴇғᴏʀᴇ ᴘᴜʀᴄʜᴀsɪɴɢ."
-        # FIXED: Removed parse_mode="markdown" - this was causing the error!
     )
     
     await m.reply_text(
@@ -42,8 +41,11 @@ async def start(_, m: Message):
 @app.on_callback_query(filters.regex("pay_now"))
 async def pay_now(_, cb):
     await cb.message.reply_photo(
-        photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",  # ✅ working QR sample
-        caption="📸 Sᴄᴀɴ Qʀ ᴄᴏᴅᴇ ᴛᴏ ᴘᴀʏ ₹499.\n\nAғᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, ᴄʟɪᴄᴋ 'Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ'",
+        photo="https://envs.sh/tsw.jpg",
+        caption="**PAY HERE JUST ₹99 TO GET PREMIUM**\n\n"
+                "**Pay Here To QR**\n\n"
+                "**OR UPI ID:** `BHARATPE.8L0D0N9B3N26276@fbpe`\n\n"
+                "> ᴀꜰᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ sᴇɴᴅ ᴍᴇ sᴄʀᴇᴇɴꜱʜᴏᴛ ✅",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ", callback_data="payment_done")]
         ])
@@ -95,7 +97,7 @@ async def handle_screenshot(_, m: Message):
 # ✅ Admin Approval
 @app.on_callback_query(filters.regex("approve_"))
 async def approve(_, cb):
-    user_id = int(cb.data.split("_")[1])  # FIXED: split by "_" instead of ""
+    user_id = int(cb.data.split("_")[1])
     await app.send_message(
         user_id,
         "🎉 Cᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! 💎 Yᴏᴜʀ Pʀᴇᴍɪᴜᴍ Aᴄᴄᴇss Hᴀs Bᴇᴇɴ Aᴄᴛɪᴠᴀᴛᴇᴅ\n📂 Jᴏɪɴ Oᴜʀ Sᴇᴄʀᴇᴛ Cʜᴀɴɴᴇʟ",
@@ -108,7 +110,7 @@ async def approve(_, cb):
 # ❌ Admin Rejection  
 @app.on_callback_query(filters.regex("reject_"))
 async def reject(_, cb):
-    user_id = int(cb.data.split("_")[1])  # FIXED: split by "_" instead of ""
+    user_id = int(cb.data.split("_")[1])
     await app.send_message(
         user_id,
         "❌ Pᴀʏᴍᴇɴᴛ ᴄᴏᴜʟᴅɴ'ᴛ ʙᴇ ᴠᴇʀɪғɪᴇᴅ. Pʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.",
