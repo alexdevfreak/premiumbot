@@ -40,6 +40,7 @@ async def start(_, m: Message):
 # 💳 Payment Flow
 @app.on_callback_query(filters.regex("pay_now"))
 async def pay_now(_, cb):
+    await cb.answer()  # Answer the callback to prevent telegram timeout
     await cb.message.reply_photo(
         photo="https://envs.sh/tsw.jpg",
         caption="**PAY HERE JUST ₹99 TO GET PREMIUM**\n\n"
@@ -53,6 +54,7 @@ async def pay_now(_, cb):
 
 @app.on_callback_query(filters.regex("payment_done"))
 async def payment_done(_, cb):
+    await cb.answer()  # Answer the callback to prevent timeout
     pending_verification.add(cb.from_user.id)
     await cb.message.reply_text("📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ ʜᴇʀᴇ.")
 
@@ -63,6 +65,7 @@ async def handle_screenshot(_, m: Message):
     if user.id not in pending_verification or m.forward_date:
         return
     
+    # Remove user from pending to prevent multiple processing
     pending_verification.discard(user.id)
     
     time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -74,8 +77,10 @@ async def handle_screenshot(_, m: Message):
         f"⏰ Tɪᴍᴇ: {time_sent}"
     )
     
+    # Forward to admin
     await m.forward(ADMIN_ID)
     
+    # Send confirmation to user
     await m.reply_text(
         "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘʟᴏᴀᴅᴇᴅ!\n\n🕵️‍♂️ Fᴏʀᴡᴀʀᴅᴇᴅ ᴛᴏ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ.",
         reply_markup=InlineKeyboardMarkup([
@@ -83,6 +88,7 @@ async def handle_screenshot(_, m: Message):
         ])
     )
     
+    # Send admin notification
     await app.send_message(
         ADMIN_ID,
         caption,
