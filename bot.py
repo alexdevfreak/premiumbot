@@ -106,3 +106,46 @@ async def approve(_, cb):
 
 # ❌ Admin Rejection
 @app.on_callback_query(filters.regex("reject_"))
+async def reject(_, cb):
+    user_id = int(cb.data.split("_")[1])
+    await app.send_message(
+        user_id,
+        "❌ Yᴏᴜʀ Pᴀʏᴍᴇɴᴛ ᴄᴏᴜʟᴅ ɴᴏᴛ ʙᴇ ᴠᴇʀɪғɪᴇᴅ. Pʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
+        ])
+    )
+    await cb.answer("User rejected ❌")
+
+# 📢 /broadcast (admin only)
+@app.on_message(filters.command("broadcast") & filters.user(ADMIN_ID))
+async def broadcast(_, m: Message):
+    if not m.reply_to_message:
+        return await m.reply("📌 Rᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ.")
+    count = 0
+    for uid in users:
+        try:
+            await app.copy_message(uid, m.chat.id, m.reply_to_message.id)
+            count += 1
+        except:
+            continue
+    await m.reply(f"✅ Bʀᴏᴀᴅᴄᴀsᴛ sᴇɴᴛ ᴛᴏ {count} ᴜsᴇʀs.")
+
+# 👥 /users
+@app.on_message(filters.command("users") & filters.user(ADMIN_ID))
+async def user_count(_, m: Message):
+    await m.reply(f"👥 Tᴏᴛᴀʟ Rᴇɢɪsᴛᴇʀᴇᴅ Uѕᴇʀs: {len(users)}")
+
+# 🆘 /support
+@app.on_message(filters.command("support") & filters.private)
+async def support(_, m: Message):
+    await m.reply_text(
+        "📨 Sᴇɴᴅ ᴀ ᴍᴇssᴀɢᴇ ʜᴇʀᴇ ᴛᴏ ᴄʜᴀᴛ ᴅɪʀᴇᴄᴛʟʏ ᴡɪᴛʜ ᴛʜᴇ ᴀᴅᴍɪɴ.\n\n🆘 Fᴏʀ ᴀɴʏ ʜᴇʟᴘ, ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ.",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🆘 Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb?&text=Sᴜᴘᴘᴏʀᴛ")]
+        ])
+    )
+
+# 🟢 Run Bot
+print("🤖 Pʀᴇᴍɪᴜᴍ Bᴏᴛ Rᴜɴɴɪɴɢ...")
+app.run()
