@@ -2,16 +2,18 @@ import os
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime
+from collections import defaultdict
 
-# 🔑 Environment Variables
-API_ID = int(os.getenv("API_ID", 123456))  
+# 🔑 Env Vars
+API_ID = int(os.getenv("API_ID", 123456))
 API_HASH = os.getenv("API_HASH", "your_api_hash_here")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "your_bot_token_here")
-ADMIN_ID = int(os.getenv("ADMIN_ID", 123456789))  # your Telegram ID
+ADMIN_ID = int(os.getenv("ADMIN_ID", 123456789))
 
-# 🧠 In-memory user tracking
+# 🧠 In-memory data
 users = set()
 pending_verification = set()
+premium_users = []  # list of dicts: {id, name, date}
 
 # 🚀 Start Bot
 app = Client("premium_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -44,7 +46,7 @@ async def pay_now(_, cb):
             "💎 **PAY ₹499 TO GET PREMIUM ACCESS**\n\n"
             "**Scan QR or Pay via UPI:**\n"
             "`BHARATPE.8L0D0N9B3N26276@fbpe`\n\n"
-            "> ᴀꜰᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, sᴇɴᴅ ᴍᴇ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ✅"
+            "> ᴀꜰᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ✅"
         ),
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ", callback_data="payment_done")]
@@ -67,7 +69,7 @@ async def handle_screenshot(_, m: Message):
     if user.id not in pending_verification or m.forward_date:
         return
 
-    pending_verification.discard(user.id)  # avoid multiple processing
+    pending_verification.discard(user.id)
 
     time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     caption = (
@@ -78,7 +80,6 @@ async def handle_screenshot(_, m: Message):
         f"⏰ Tɪᴍᴇ: {time_sent}"
     )
 
-    # Send screenshot once to admin
     await app.send_photo(
         ADMIN_ID,
         photo=m.photo.file_id,
@@ -91,7 +92,6 @@ async def handle_screenshot(_, m: Message):
         ])
     )
 
-    # Notify user
     await m.reply_text(
         "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ sᴇɴᴛ ᴛᴏ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n\n⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ.",
         reply_markup=InlineKeyboardMarkup([
@@ -103,6 +103,17 @@ async def handle_screenshot(_, m: Message):
 @app.on_callback_query(filters.regex("^approve_"))
 async def approve(_, cb):
     user_id = int(cb.data.split("_")[1])
+    user = await app.get_users(user_id)
+
+    # Add buyer info
+    today = datetime.now().strftime("%Y-%m-%d")
+    premium_users.append({
+        "id": user.id,
+        "name": user.first_name,
+        "username": user.username,
+        "date": today
+    })
+
     await app.send_message(
         user_id,
         "🎉 Cᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! 💎 Yᴏᴜʀ Pʀᴇᴍɪᴜᴍ Aᴄᴄᴇss Hᴀs Bᴇᴇɴ Aᴄᴛɪᴠᴀᴛᴇᴅ\n📂 Jᴏɪɴ Oᴜʀ Sᴇᴄʀᴇᴛ Cʜᴀɴɴᴇʟ",
@@ -125,7 +136,7 @@ async def reject(_, cb):
     )
     await cb.answer("User rejected ❌")
 
-# 📢 /broadcast (admin only)
+# 📢 /broadcast
 @app.on_message(filters.command("broadcast") & filters.user(ADMIN_ID))
 async def broadcast(_, m: Message):
     if not m.reply_to_message:
@@ -145,6 +156,26 @@ async def broadcast(_, m: Message):
 @app.on_message(filters.command("users") & filters.user(ADMIN_ID))
 async def user_count(_, m: Message):
     await m.reply(f"👥 Tᴏᴛᴀʟ Uѕᴇʀs: {len(users)}")
+
+# 📊 /listp - Premium Buyers List
+@app.on_message(filters.command("listp") & filters.user(ADMIN_ID))
+async def list_premium(_, m: Message):
+    if not premium_users:
+        return await m.reply("📊 Nᴏ ᴘʀᴇᴍɪᴜᴍ ᴘᴜʀᴄʜᴀsᴇs ʏᴇᴛ.")
+
+    # Group by date
+    stats = defaultdict(list)
+    for u in premium_users:
+        stats[u["date"]].append(u)
+
+    text = "📊 **Premium Buyers Report**\n\n"
+    for date, buyers in stats.items():
+        text += f"📅 {date} → {len(buyers)} users\n"
+        for b in buyers:
+            text += f"   └ {b['name']} (@{b['username'] or 'N/A'})\n"
+        text += "\n"
+
+    await m.reply(text)
 
 # 🆘 /support
 @app.on_message(filters.command("support") & filters.private)
