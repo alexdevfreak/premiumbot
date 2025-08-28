@@ -42,7 +42,7 @@ async def start(_, m: Message):
 @app.on_callback_query(filters.regex("pay_now"))
 async def pay_now(_, cb):
     await cb.message.reply_photo(
-        photo="https://i.ibb.co/YycYVgS/qr-code-sample.jpg",  # ✅ working QR sample
+        photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",  # ✅ working QR sample
         caption="📸 Sᴄᴀɴ Qʀ ᴄᴏᴅᴇ ᴛᴏ ᴘᴀʏ ₹499.\n\nAғᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, ᴄʟɪᴄᴋ 'Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ'",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ", callback_data="payment_done")]
