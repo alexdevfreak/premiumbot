@@ -21,15 +21,16 @@ app = Client("premium_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKE
 async def start(_, m: Message):
     users.add(m.from_user.id)
 
-    await m.reply_text(
-        "💖 Pᴇʀᴍᴀɴᴇɴᴛ Mᴇᴍʙᴇʀsʜɪᴘ – ~₹999~ (𝐃ɪsᴄᴏᴜɴᴛᴇᴅ) ₹499 ⭐\n\n"
-        "✅ Dɪʀᴇᴄᴛ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
-        "✅ Dᴀɪʟʏ Nᴇᴡ Uᴘᴅᴀᴛᴇs\n"
-        "✅ Aʟʀᴇᴀᴅʏ 10,000+ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
-        "❌ Nᴏ Aᴅs | Nᴏ Lɪɴᴋs\n\n"
-        "⚠ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ – Aʟʟ ᴠɪᴅᴇᴏs ᴀɴᴅ ᴄᴏɴᴛᴇɴᴛs ᴡɪʟʟ ʙᴇ ᴏɴ ᴛʜᴇ Cʜᴀɴɴᴇʟ ᴛᴏ ᴄʜᴇᴄᴋ ʙᴇғᴏʀᴇ ᴘᴜʀᴄʜᴀsɪɴɢ.",
-        parse_mode="Markdown"
-    )
+  await m.reply_text(
+    "💖 Pᴇʀᴍᴀɴᴇɴᴛ Mᴇᴍʙᴇʀsʜɪᴘ – ~₹999~ (𝐃ɪsᴄᴏᴜɴᴛᴇᴅ) ₹499 ⭐\n\n"
+    "✅ Dɪʀᴇᴄᴛ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
+    "✅ Dᴀɪʟʏ Nᴇᴡ Uᴘᴅᴀᴛᴇs\n"
+    "✅ Aʟʀᴇᴀᴅʏ 10,000+ Vɪᴅᴇᴏs Uᴘʟᴏᴀᴅᴇᴅ\n"
+    "❌ Nᴏ Aᴅs | Nᴏ Lɪɴᴋs\n\n"
+    "⚠ Dᴇᴍᴏ Cʜᴀɴɴᴇʟ – Aʟʟ ᴠɪᴅᴇᴏs ᴀɴᴅ ᴄᴏɴᴛᴇɴᴛs ᴡɪʟʟ ʙᴇ ᴏɴ ᴛʜᴇ Cʜᴀɴɴᴇʟ ᴛᴏ ᴄʜᴇᴄᴋ ʙᴇғᴏʀᴇ ᴘᴜʀᴄʜᴀsɪɴɢ.",
+    parse_mode="markdown"
+)
+
 
     await m.reply_text(
         "👋 Wᴇʟᴄᴏᴍᴇ! 💎 Bᴜʏ Pʀᴇᴍɪᴜᴍ ғᴏʀ ᴊᴏɪɴɪɴɢ ᴏᴜʀ sᴇᴄʀᴇᴛ ᴄʜᴀɴɴᴇʟ 💰 Pʀɪᴄᴇ: ₹499",
