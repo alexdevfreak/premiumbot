@@ -35,28 +35,30 @@ async def start(_, m: Message):
     )
 
 # 💳 Payment Flow
-@app.on_callback_query(filters.regex("pay_now"))
+@app.on_callback_query(filters.regex("^pay_now$"))
 async def pay_now(_, cb):
     await cb.answer()
     await cb.message.reply_photo(
         photo="https://envs.sh/tsw.jpg",
         caption=(
-            "💎 **PAY HERE JUST ₹499 TO GET PREMIUM**\n\n"
-            "**Scan the QR or Pay via UPI:**\n"
+            "💎 **PAY ₹499 TO GET PREMIUM ACCESS**\n\n"
+            "**Scan QR or Pay via UPI:**\n"
             "`BHARATPE.8L0D0N9B3N26276@fbpe`\n\n"
-            "> ᴀꜰᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ sᴇɴᴅ ᴍᴇ sᴄʀᴇᴇɴsʜᴏᴛ ✅"
+            "> ᴀꜰᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ, sᴇɴᴅ ᴍᴇ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ✅"
         ),
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Pᴀʏᴍᴇɴᴛ Dᴏɴᴇ", callback_data="payment_done")]
         ])
     )
 
-@app.on_callback_query(filters.regex("payment_done"))
+@app.on_callback_query(filters.regex("^payment_done$"))
 async def payment_done(_, cb):
     await cb.answer()
     if cb.from_user.id not in pending_verification:
         pending_verification.add(cb.from_user.id)
         await cb.message.reply_text("📤 Pʟᴇᴀsᴇ sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ ᴏғ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʀᴇᴄᴇɪᴘᴛ ʜᴇʀᴇ.")
+    else:
+        await cb.message.reply_text("⏳ Yᴏᴜ ᴀʟʀᴇᴀᴅʏ ᴍᴀʀᴋᴇᴅ ᴘᴀʏᴍᴇɴᴛ. Sᴇɴᴅ ᴀ sᴄʀᴇᴇɴsʜᴏᴛ.")
 
 # 📸 Screenshot Handler
 @app.on_message(filters.photo & filters.private)
@@ -65,8 +67,7 @@ async def handle_screenshot(_, m: Message):
     if user.id not in pending_verification or m.forward_date:
         return
 
-    # Remove user from pending
-    pending_verification.discard(user.id)
+    pending_verification.discard(user.id)  # avoid multiple processing
 
     time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     caption = (
@@ -77,7 +78,7 @@ async def handle_screenshot(_, m: Message):
         f"⏰ Tɪᴍᴇ: {time_sent}"
     )
 
-    # Send screenshot + details to admin (only once)
+    # Send screenshot once to admin
     await app.send_photo(
         ADMIN_ID,
         photo=m.photo.file_id,
@@ -92,16 +93,14 @@ async def handle_screenshot(_, m: Message):
 
     # Notify user
     await m.reply_text(
-        "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ ᴜᴘʟᴏᴀᴅᴇᴅ!\n\n"
-        "🕵️‍♂️ Sᴇɴᴛ ᴛᴏ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n"
-        "⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ.",
+        "📸 Yᴏᴜʀ sᴄʀᴇᴇɴsʜᴏᴛ ʜᴀs ʙᴇᴇɴ sᴇɴᴛ ᴛᴏ ᴀᴅᴍɪɴ ғᴏʀ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ.\n\n⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ.",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb")]
         ])
     )
 
 # ✅ Admin Approval
-@app.on_callback_query(filters.regex("approve_"))
+@app.on_callback_query(filters.regex("^approve_"))
 async def approve(_, cb):
     user_id = int(cb.data.split("_")[1])
     await app.send_message(
@@ -114,12 +113,12 @@ async def approve(_, cb):
     await cb.answer("User approved ✅")
 
 # ❌ Admin Rejection  
-@app.on_callback_query(filters.regex("reject_"))
+@app.on_callback_query(filters.regex("^reject_"))
 async def reject(_, cb):
     user_id = int(cb.data.split("_")[1])
     await app.send_message(
         user_id,
-        "❌ Pᴀʏᴍᴇɴᴛ ᴄᴏᴜʟᴅɴ'ᴛ ʙᴇ ᴠᴇʀɪғɪᴇᴅ. Pʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.",
+        "❌ Pᴀʏᴍᴇɴᴛ ᴄᴏᴜʟᴅɴ'ᴛ ʙᴇ ᴠᴇʀɪғɪᴇᴅ.\n\nPʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="http://t.me/alex_clb")]
         ])
