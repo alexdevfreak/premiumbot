@@ -12,6 +12,11 @@ from pyrogram.types import (
 # ─────────────────────────────────────────────────────────────────────────────
 # 🔑 Environment Variables
 # ─────────────────────────────────────────────────────────────────────────────
+# API_ID: Telegram API ID (int)
+# API_HASH: Telegram API Hash (str)
+# BOT_TOKEN: Telegram Bot Token (str)
+# ADMIN_ID: Main Admin Telegram User ID (int)
+
 API_ID = int(os.getenv("API_ID", 123456))
 API_HASH = os.getenv("API_HASH", "your_api_hash_here")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "your_bot_token_here")
@@ -20,6 +25,13 @@ ADMIN_ID = int(os.getenv("ADMIN_ID", 123456789))
 # ─────────────────────────────────────────────────────────────────────────────
 # 🧠 Data Storage
 # ─────────────────────────────────────────────────────────────────────────────
+# users: Set of all user IDs who started the bot
+# pending_verification: Set of user IDs who have marked payment but not yet verified/rejected
+# premium_users: List of dicts, each containing premium user details
+# verified_or_rejected: Set of user IDs whose payment is already reviewed
+# admin_ids: Set of all admin user IDs
+# user_states: Dict mapping user ID to their current state (start, qr_sent, payment_marked, etc)
+
 users = set()
 pending_verification = set()
 premium_users = []
@@ -30,19 +42,28 @@ user_states = {}  # Track user states properly
 # ─────────────────────────────────────────────────────────────────────────────
 # 🚀 Bot Client
 # ─────────────────────────────────────────────────────────────────────────────
+# app: Pyrogram Client instance for the bot
+
 app = Client("premium_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 def today_str():
+    """Return today's date as YYYY-MM-DD string."""
     return datetime.now().strftime("%Y-%m-%d")
 
 def is_admin(user_id):
+    """Return True if user_id is an admin."""
     return user_id in admin_ids
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 👋 /start Command
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("start") & filters.private)
-async def start(_, m):
+async def start(_, m: Message):
+    """
+    Handles /start command in private chat.
+    Adds user to users set and sets state.
+    Sends welcome message with Pay button.
+    """
     users.add(m.from_user.id)
     user_states[m.from_user.id] = "start"
 
@@ -65,6 +86,11 @@ async def start(_, m):
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex("^pay_now$"))
 async def pay_now(_, cb):
+    """
+    Handles Pay Now button callback.
+    Prevents duplicate QR sending.
+    Sends payment instructions and QR.
+    """
     user_id = cb.from_user.id
     
     # Prevent double QR sending
@@ -76,7 +102,7 @@ async def pay_now(_, cb):
     user_states[user_id] = "qr_sent"
     
     await cb.message.reply_photo(
-        photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",
+        photo="https://envs.sh/tsw.jpg/jfals.Zip_Extractor_Robot",  # FIX: Should be a valid image link
         caption=(
             "💎 **PAY ₹499 TO GET PREMIUM ACCESS**\n\n"
             "**Scan QR or Pay via UPI:**\n"
@@ -93,6 +119,11 @@ async def pay_now(_, cb):
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex("^payment_done$"))
 async def payment_done(_, cb):
+    """
+    Handles Payment Done button callback.
+    Marks user as pending verification.
+    Prevents duplicate submissions.
+    """
     user_id = cb.from_user.id
     
     if user_id in verified_or_rejected:
@@ -111,7 +142,14 @@ async def payment_done(_, cb):
 # 📸 Screenshot Handler
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.photo & filters.private)
-async def handle_screenshot(_, m):
+async def handle_screenshot(_, m: Message):
+    """
+    Handles photo (screenshot) messages in private chat.
+    Only processes if user is in payment_marked state.
+    Prevents double processing and forwarded images.
+    Sends screenshot to all admins with approve/reject buttons.
+    Confirms to user.
+    """
     user = m.from_user
     user_id = user.id
     
@@ -152,7 +190,7 @@ async def handle_screenshot(_, m):
                     ]
                 ]),
             )
-        except:
+        except Exception:
             continue
 
     # Send single confirmation to user
@@ -168,6 +206,11 @@ async def handle_screenshot(_, m):
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex(r"^approve_\d+$"))
 async def approve(_, cb):
+    """
+    Handles admin approval of payment screenshot.
+    Adds user to premium_users list.
+    Notifies user with channel link.
+    """
     if not is_admin(cb.from_user.id):
         await cb.answer("❌ Not authorized!", show_alert=True)
         return
@@ -191,7 +234,7 @@ async def approve(_, cb):
             "username": user.username,
             "date": today_str(),
         })
-    except:
+    except Exception:
         premium_users.append({
             "id": user_id,
             "name": "Unknown User",
@@ -207,7 +250,7 @@ async def approve(_, cb):
                 [[InlineKeyboardButton("🔗 Jᴏɪɴ Pʀᴇᴍɪᴜᴍ Cʜᴀɴɴᴇʟ", url="https://t.me/Alex_clb")]]
             ),
         )
-    except:
+    except Exception:
         pass
 
     await cb.message.edit_reply_markup(None)
@@ -217,6 +260,10 @@ async def approve(_, cb):
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex(r"^reject_\d+$"))
 async def reject(_, cb):
+    """
+    Handles admin rejection of payment screenshot.
+    Marks user as rejected and notifies user.
+    """
     if not is_admin(cb.from_user.id):
         await cb.answer("❌ Not authorized!", show_alert=True)
         return
@@ -236,7 +283,7 @@ async def reject(_, cb):
                 [[InlineKeyboardButton("🆘 Cᴏɴᴛᴀᴄᴛ Sᴜᴘᴘᴏʀᴛ", url="https://t.me/alex_clb")]]
             ),
         )
-    except:
+    except Exception:
         pass
 
     await cb.message.edit_reply_markup(None)
@@ -245,7 +292,11 @@ async def reject(_, cb):
 # 👤 /addadmin - Add Staff Admin (Main Admin Only)
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("addadmin") & filters.user(ADMIN_ID))
-async def add_admin(_, m):
+async def add_admin(_, m: Message):
+    """
+    Main admin can add new staff admin by /addadmin USER_ID
+    Notifies the new admin and main admin.
+    """
     if len(m.command) != 2:
         return await m.reply("❌ **Usage:** `/addadmin USER_ID`")
     
@@ -280,17 +331,20 @@ async def add_admin(_, m):
                 "• Send broadcasts with `/broadcast`\n\n"
                 "⚠️ **Note:** Only main admin can add/remove admins."
             )
-        except:
+        except Exception:
             pass
             
-    except:
+    except Exception:
         await m.reply("❌ **User not found!**")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 👥 /listadmins - List All Admins (Main Admin Only)  
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("listadmins") & filters.user(ADMIN_ID))
-async def list_admins(_, m):
+async def list_admins(_, m: Message):
+    """
+    Main admin can list all admins and their details.
+    """
     text_lines = ["👥 **Admin List:**\n"]
     
     for i, admin_id in enumerate(admin_ids, 1):
@@ -302,7 +356,7 @@ async def list_admins(_, m):
                 f"   └ {user.first_name or 'N/A'} (@{user.username or 'N/A'})\n"
                 f"   └ ID: `{admin_id}`\n"
             )
-        except:
+        except Exception:
             admin_type = "🔴 **Main**" if admin_id == ADMIN_ID else "🟢 **Staff**"  
             text_lines.append(f"{i}. {admin_type} - ID: `{admin_id}`\n")
     
@@ -313,7 +367,11 @@ async def list_admins(_, m):
 # 🗑️ /removeadmin - Remove Staff Admin (Main Admin Only)
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("removeadmin") & filters.user(ADMIN_ID))
-async def remove_admin(_, m):
+async def remove_admin(_, m: Message):
+    """
+    Main admin can remove a staff admin using /removeadmin USER_ID
+    Notifies the removed admin.
+    """
     if len(m.command) != 2:
         return await m.reply("❌ **Usage:** `/removeadmin USER_ID`")
     
@@ -336,14 +394,18 @@ async def remove_admin(_, m):
             admin_to_remove,
             "📢 **Admin access removed.** Thank you for your service!"
         )
-    except:
+    except Exception:
         pass
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 📢 /broadcast (All Admins)
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("broadcast"))
-async def broadcast(_, m):
+async def broadcast(_, m: Message):
+    """
+    Any admin can broadcast a message to all users by replying to a message with /broadcast.
+    Shows progress and completion count.
+    """
     if not is_admin(m.from_user.id):
         return await m.reply("❌ **Not authorized!**")
         
@@ -359,7 +421,7 @@ async def broadcast(_, m):
         try:
             await app.copy_message(uid, m.chat.id, m.reply_to_message.id)
             count += 1
-        except:
+        except Exception:
             continue
 
     await progress_msg.edit_text(f"✅ **Broadcast completed!** Sent to {count} users.")
@@ -368,7 +430,11 @@ async def broadcast(_, m):
 # 👥 /users (All Admins)
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("users"))
-async def user_count(_, m):
+async def user_count(_, m: Message):
+    """
+    Any admin can get bot statistics with /users.
+    Shows total users, pending, premium, admins, and date.
+    """
     if not is_admin(m.from_user.id):
         return await m.reply("❌ **Not authorized!**")
         
@@ -385,7 +451,12 @@ async def user_count(_, m):
 # 📊 /listp - Premium Users Report (All Admins)
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("listp"))
-async def list_premium(_, m):
+async def list_premium(_, m: Message):
+    """
+    Any admin can get report of all premium users with /listp.
+    Groups by date and includes today's count.
+    Handles long report messages.
+    """
     if not is_admin(m.from_user.id):
         return await m.reply("❌ **Not authorized!**")
         
@@ -412,9 +483,11 @@ async def list_premium(_, m):
 
     full_text = "\n".join(text_lines)
     
-    if len(full_text) > 4096:
-        for i in range(0, len(full_text), 4000):
-            await m.reply(full_text[i:i+4000])
+    MAX_MSG = 4096
+    # Send in chunks if too long
+    if len(full_text) > MAX_MSG:
+        for i in range(0, len(full_text), MAX_MSG - 100):
+            await m.reply(full_text[i:i + MAX_MSG - 100])
     else:
         await m.reply(full_text)
 
@@ -422,7 +495,11 @@ async def list_premium(_, m):
 # 🆘 /support
 # ─────────────────────────────────────────────────────────────────────────────
 @app.on_message(filters.command("support") & filters.private)
-async def support(_, m):
+async def support(_, m: Message):
+    """
+    Handles /support command in private chat.
+    Sends support info and button.
+    """
     await m.reply_text(
         "📨 Cʜᴀᴛ ᴡɪᴛʜ ᴀᴅᴍɪɴ ᴅɪʀᴇᴄᴛʟʏ.\n\n🆘 Fᴏʀ ʜᴇʟᴘ, ᴄʟɪᴄᴋ ʙᴇʟᴏᴡ.",
         reply_markup=InlineKeyboardMarkup(
@@ -434,5 +511,6 @@ async def support(_, m):
 # 🟢 Run Bot
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    # Entry point for running the bot.
     print("🤖 Premium Bot Starting...")
     app.run()
