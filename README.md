@@ -34,12 +34,12 @@ Set these environment variables before running:
 
 | Variable       | Example Value                                      | Description |
 |----------------|----------------------------------------------------|-------------|
-| BOT_TOKEN      | `8328427365:AAEesZ4IFdhi13gJhLrlNVDckYnswgACCWw`   | Telegram Bot Token from [@BotFather](https://t.me/BotFather) |
-| API_ID         | `12870719`                                         | API ID from [my.telegram.org](https://my.telegram.org) |
+| BOT_TOKEN      | `1234567890:Aasdfghjklmnbvcxzqwertyuioplkjhgf`   | Telegram Bot Token from [@BotFather](https://t.me/BotFather) |
+| API_ID         | `12345678`                                         | API ID from [my.telegram.org](https://my.telegram.org) |
 | API_HASH       | `aec3e63c5538ca578429174d6769b3ac`                 | API Hash from [my.telegram.org](https://my.telegram.org) |
-| ADMIN_ID       | `7202273962`                                       | Telegram User ID of Admin |
-| LOG_CHANNEL    | `-1002649126743`                                   | Channel ID for user logs |
-| DATA_CHANNEL   | `-1002558869665`                                   | Channel ID for uploaded files |
+| ADMIN_ID       | `1234567890`                                       | Telegram User ID of Admin |
+| LOG_CHANNEL    | `-1001234567890`                                   | Channel ID for user logs |
+| DATA_CHANNEL   | `-1001234567890`                                   | Channel ID for uploaded files |
 
 ---
 
